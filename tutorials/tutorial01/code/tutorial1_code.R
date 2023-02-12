@@ -31,6 +31,7 @@ data %>%
 formula <- `GDP per capita (current US$)` ~ `Tax revenue (% of GDP)` + `Ease of doing business rank (1=most business-friendly regulations)`
 
 reg <- lm(formula, data)
+summary(reg)
 
 stargazer(reg, type = "latex")
 
