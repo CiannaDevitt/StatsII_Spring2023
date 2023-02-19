@@ -1,7 +1,7 @@
 #####################
-# load libraries
-# set wd
-# clear global .envir
+# Applied Stats II
+# ProblemSet 2
+# Cianna Devitt
 #####################
 
 # remove objects
@@ -27,6 +27,7 @@ pkgTest <- function(pkg){
 # ex: stringr
 # lapply(c("stringr"),  pkgTest)
 
+
 lapply(c(),  pkgTest)
 
 # set wd for current folder
@@ -38,3 +39,34 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # load data
 load(url("https://github.com/ASDS-TCD/StatsII_Spring2023/blob/main/datasets/climateSupport.RData?raw=true"))
+
+climateSupport$choice <- as.numeric(ifelse(climateSupport$choice == 'Supported', 1,0))
+
+
+
+model <- glm(choice ~ sanctions + countries, 
+             family = binomial(link = 'logit'), 
+             data = climateSupport)
+
+
+summary(model)
+
+
+
+model_null <- glm(choice ~ 1, 
+                  family = binomial(link = 'logit'), 
+                  data = climateSupport)
+anova(model_null, model, test = 'LRT')
+
+
+model_int <- glm(choice ~ sanctions * countries, 
+                 family = binomial(link = 'logit'), 
+                 data = climateSupport)
+summary(model_int)
+
+anova(model_null, model_int, test = 'LRT')
+
+1-pchisq((11783-11568)/(8499-8494))
+
+
+1/1 + exp(0.005 + ((-0.27)*(80/192))) 
