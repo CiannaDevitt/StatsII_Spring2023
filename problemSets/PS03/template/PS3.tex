@@ -62,7 +62,7 @@
 
 \title{Problem Set 3}
 \date{Due: March 26, 2023}
-\author{Applied Stats II}
+\author{Cianna Devitt (17321885)}
 
 
 \begin{document}
@@ -100,8 +100,77 @@
 
 \begin{enumerate}
 	\item Construct and interpret an unordered multinomial logit with \texttt{GDPWdiff} as the output and "no change" as the reference category, including the estimated cutoff points and coefficients.
-	\item Construct and interpret an ordered multinomial logit with \texttt{GDPWdiff} as the outcome variable, including the estimated cutoff points and coefficients.
+	\newline\texttt{Load in data and set factors, releveled with 'no change' as reference category}
+	\begin{lstlisting}[language=R]
+		gdpChange$GDPWdiff <- factor(ifelse(sign(gdpChange$GDPWdiff) == -1, 'negative',
+		ifelse(sign(gdpChange$GDPWdiff) == 0, 'no change','positive')))
+		
+		
+		gdpChange$GDPWdiff <- relevel(gdpChange$GDPWdiff, ref = 'no change')
+	\end{lstlisting}
+\newline\texttt{Running base multinomial logit unordered}
+  \begin{lstlisting}[language=R]
+	multinom_model1 <- multinom(GDPWdiff ~ REG + OIL,
+	data = gdpChange)
 	
+	summary(multinom_model1)
+	
+	
+	Coefficients:
+	(Intercept)      REG      OIL
+	negative    3.805370 1.379282 4.783968
+	positive    4.533759 1.769007 4.576321
+	
+	Std. Errors:
+	(Intercept)       REG      OIL
+	negative   0.2706832 0.7686958 6.885366
+	positive   0.2692006 0.7670366 6.885097
+	
+	Residual Deviance: 4678.77 
+	AIC: 4690.77 
+\end{lstlisting}
+\newline\texttt{In a given country, there is an increase baseline odds of 1.76 that the difference in GDP will be positive. }
+	
+	\item Construct and interpret an ordered multinomial logit with \texttt{GDPWdiff} as the outcome variable, including the estimated cutoff points and coefficients.
+	\newline\texttt{Running base multinomial logit ordered}
+	\begin{lstlisting}[language=R]
+		multinom_model2 <- polr(GDPWdiff ~ REG + OIL,
+		data = gdpChange)
+		
+		summary(multinom_model2)
+		
+		
+		Coefficients:
+		Value Std. Error t value
+		REG  0.4102    0.07518   5.456
+		OIL -0.1788    0.11546  -1.549
+		
+		Intercepts:
+		Value    Std. Error t value 
+		no change|negative  -5.3199   0.2523   -21.0878
+		negative|positive   -0.7036   0.0476   -14.7933
+		
+		Residual Deviance: 4686.606 
+		AIC: 4694.606
+	\end{lstlisting}
+
+\newline\texttt{Finding proportional odds ratios}
+	\begin{lstlisting}[language=R]
+		ci <- confint(multinom_model2)
+		confint.default(multinom_model2)
+		exp(cbind(OR= coef(multinom_model2), ci))
+		
+		
+		  OR     2.5 %   97.5 %
+		REG 1.5070726 1.3012858 1.747374
+		OIL 0.8362455 0.6680959 1.050857
+	\end{lstlisting}
+
+\newline\texttt{For a unit increase in democratic status (REG), the odds of GDP difference increase
+	by 1.5, holding constant all other variables
+	 For a unit increase in ratio of fuel exports (OIL),
+	 the odds of being more likely positive GDP difference is 
+	 0.836, holding all other variables constant.}
 	
 \end{enumerate}
 
@@ -113,13 +182,60 @@
 \begin{enumerate}
 	\item [(a)]
 	Run a Poisson regression because the outcome is a count variable. Is there evidence that PAN presidential candidates visit swing districts more? Provide a test statistic and p-value.
+	
+	\newline\texttt{Running Poisson Regression Model}
+	\begin{lstlisting}[language=R]
+		Mex_poisson <- glm(PAN.visits.06 ~ competitive.district + marginality.06
+		+ PAN.governor.06, data = MexicoMuniData, family = poisson)
+		
+		summary(Mex_poisson)
+		
+		
+		Coefficients:
+		Estimate Std. Error z value
+		(Intercept)          -3.81023    0.22209 -17.156
+		competitive.district -0.08135    0.17069  -0.477
+		marginality.06       -2.08014    0.11734 -17.728
+		PAN.governor.06      -0.31158    0.16673  -1.869
+		Pr(>|z|)    
+		(Intercept)            <2e-16 ***
+		competitive.district   0.6336    
+		marginality.06         <2e-16 ***
+		PAN.governor.06        0.0617 .  
+		---
+		Signif. codes:  
+		0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+		
+		(Dispersion parameter for poisson family taken to be 1)
+		
+		Null deviance: 1473.87  on 2406  degrees of freedom
+		Residual deviance:  991.25  on 2403  degrees of freedom
+		AIC: 1299.2
+		
+		Number of Fisher Scoring iterations: 7
+	\end{lstlisting}
 
 	\item [(b)]
-	Interpret the \texttt{marginality.06} and \texttt{PAN.governor.06} coefficients.
-	
+	\texttt{With a unit increase in 'marginality.06' ie a measure of poverty, had a diminished liklihood by 2.08 of having candidate visitations, holding all other variables constant. 
+		With a unit increase in 'PAN.governor.06' ie whetther state has a PAN=affiliated governor, had a diminished liklihood by 0.31 of having candidate visitations, holding all other variables constant.}
 	\item [(c)]
 	Provide the estimated mean number of visits from the winning PAN presidential candidate for a hypothetical district that was competitive (\texttt{competitive.district}=1), had an average poverty level (\texttt{marginality.06} = 0), and a PAN governor (\texttt{PAN.governor.06}=1).
 	
+	
+	\vspace{2cm}
+	
+	
+	\texttt{Getting Fitted Values}
+	\newline\texttt{$ \lambda_i = e^\beta_o + \beta_1_X_i$}
+	
+	\begin{lstlisting}[language=R]
+		lambda30 <- exp(coeffs[1] + coeffs[2]*1)
+		lambda30
+		
+		
+		(Intercept) 
+		0.02041293
+	\end{lstlisting}
 \end{enumerate}
 
 \end{document}
